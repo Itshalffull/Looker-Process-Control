@@ -1,0 +1,639 @@
+Comprehensive Design Document for Custom "6-Week Graph" and "12-Month Graph" Visualizations in Looker
+
+Table of Contents
+
+1. Introduction
+2. Objectives
+3. Requirements
+   - Functional Requirements
+   - Non-Functional Requirements
+4. Data Requirements
+   - Data Sources
+   - Data Fields
+   - Data Transformations
+5. Visualization Design
+   - Layout and Components
+   - User Interface Elements
+   - Styling and Theming
+6. Technical Design
+   - Technology Stack
+   - Integration with Looker API
+   - Looker Visualization API Usage
+   - Data Transformation Logic
+   - Limitations and Workarounds
+7. Implementation Plan
+   - Development Steps
+   - Code Structure
+   - Functions and Modules
+8. Testing and Validation
+   - Test Cases
+   - Performance Testing
+9. Deployment
+   - Hosting Visualization Files
+   - Registering the Visualization in Looker
+10. Appendix
+   - Sample Code Snippets
+   - Configuration Files
+   - References
+
+1. Introduction
+
+This design document provides an in-depth plan for developing custom "6-Week Graph" and "12-Month Graph" visualizations in Looker. The visualizations aim to replicate a common reporting format used in Amazon-style Weekly Business Reviews (WBR), featuring two separate graphs: a six-week trailing graph and a twelve-month trailing graph. These visualizations will be developed as Looker community visualizations, leveraging Looker's Visualization API and other relevant technologies.
+
+2. Objectives
+
+- **Primary Goal**: Create custom visualizations that separately display 6-week and 12-month views for selected metrics within Looker dashboards, which can be placed side by side.
+- **User Empowerment**: Allow users to interactively select metrics, configure display options, and gain insights efficiently.
+- **Performance**: Ensure the visualizations are optimized for performance, even with large datasets.
+- **Compatibility**: Ensure seamless integration with Looker's platform and APIs.
+
+3. Requirements
+
+### 3.1 Functional Requirements
+
+- **Separate Graph Display**:
+  - **6-Week Graph**: Trailing six weeks of data with weekly granularity.
+  - **12-Month Graph**: Trailing twelve months of data with monthly granularity.
+  - **Side-by-Side Placement**: Allow Looker users to place the graphs side by side within dashboards for easy comparison.
+
+- **Historical Comparison**: Display a faded line representing the same metric from one year ago on both graphs, using a distinct color (e.g., light pink) to clearly differentiate historical data from current data.
+
+- **Target Indicators**: Show green triangles representing target values on the graphs where applicable.
+  - Targets are set during planning processes and need to be transformed to weekly or monthly values.
+  - Not every metric will have a target, and this should be visually communicated (e.g., no triangle for missing targets).
+
+- **Data Labels on Graphs**: Present numerical values directly on the line graphs at each data point to provide immediate context. Labels should be strategically positioned to avoid overlapping and maintain clarity.
+
+- **Graph Numbering**: Display a unique identifier (e.g., "Graph 1", "Graph 3") at the top-left corner of each graph for reference during meetings.
+
+- **Box Scores**: Provide a consistent list of contextual numbers (box scores) at the bottom of each graph. These box scores include key metrics such as:
+  - **Last Week's Value**: Shows the value of the metric from the most recent week.
+  - **Week-Over-Week (WOW) Change**: Displays the percentage change compared to the previous week.
+  - **Year-Over-Year (YOY) Change**: Displays the percentage change compared to the same week/month from the previous year.
+  - **Month-To-Date (MTD) Total**: Cumulative total for the current month.
+  - **Quarter-To-Date (QTD) Total**: Cumulative total for the current quarter.
+  - **Year-To-Date (YTD) Total**: Cumulative total for the current year.
+
+- **Growth Rates Display**: Optionally display growth rates (percentage changes) alongside absolute values to provide additional context.
+
+- **User Configuration Options**: Allow users to:
+  - Select metrics and dimensions.
+  - Customize styling options (colors, line styles, etc.).
+  - Toggle display options (e.g., show/hide growth rates, targets, historical data).
+
+- **Interactivity**: Support tooltips on hover for data points to show detailed information such as the exact value, target, and growth rate. Enable click interactions to filter data if applicable.
+
+### 3.2 Non-Functional Requirements
+
+- **Performance**: Fast loading times, even with datasets spanning multiple years. Efficient data processing and rendering.
+
+- **Responsiveness**: Visualizations should be responsive to different screen sizes and resolutions.
+
+- **Compatibility**: Fully compatible with the latest version of Looker. Adhere to Looker's community visualization guidelines and best practices.
+
+- **Maintainability**: Code should be modular, well-documented, and easy to maintain or extend.
+
+- **Security**: Ensure that the visualizations do not expose any sensitive data. Follow best practices for data handling and API usage.
+
+4. Data Requirements
+
+### 4.1 Data Sources
+
+- **Looker Explores**: The visualizations will use data fetched from Looker Explores defined by the user's LookML models.
+- **Metrics and Dimensions**: Users can select from available metrics and dimensions within the Looker interface.
+
+### 4.2 Data Fields
+
+- **Date Dimension**: Used for the X-axis. Needs to support weekly and monthly granularity.
+- **Metrics**:
+  - **Primary Metric**: The main metric to be plotted.
+  - **Target Metric**: Target values for the metric.
+  - **Historical Metric**: The same metric from one year ago.
+- **Box Scores Metrics**: Additional metrics providing context, such as week-over-week change, year-over-year change, cumulative totals, and other relevant KPIs.
+- **Calculated Fields**: Growth rates, aggregations, and other derived metrics.
+
+### 4.3 Data Transformations
+
+- **Time Alignment**: Align current and historical data to the correct weeks/months for accurate comparison.
+- **Granularity Adjustment**: Aggregate data to weekly and monthly levels.
+- **Missing Data Handling**: Handle nulls or missing data points gracefully by either interpolating values or displaying gaps clearly.
+- **Date Range Calculations**: Compute trailing six weeks and twelve months from the current date.
+
+5. Visualization Design
+
+### 5.1 Layout and Components
+
+- **Separate Layout**: Create two separate visualizations for the 6-week and 12-month views. Allow users to place them side by side in Looker dashboards.
+
+- **6-Week Graph**: X-Axis with dates representing the last six weeks, Y-Axis with metric values, current year data line, historical data line (faded in pink), and target indicators (green triangles).
+
+- **12-Month Graph**: X-Axis with dates representing the last twelve months, Y-Axis with metric values, current year data line, historical data line (faded in pink), and target indicators (green triangles).
+
+- **Graph Numbering**: Displayed prominently at the top-left corner of each graph (e.g., "Graph 3") for easy reference during reviews.
+
+- **Box Scores**: Positioned below each graph, including key metrics such as Last Week, WOW, YOY, MTD, QTD, and YTD. Consistent format across all graphs to make comparisons easier.
+
+### 5.2 User Interface Elements
+
+- **Data Selection Controls**:
+  - **Metric Selector**: Dropdown or list allowing users to select the primary metric.
+  - **Date Dimension Selector**: Choose the date field to use for the X-axis.
+  - **Target Metric Selector**: Optionally select a metric for target values.
+
+- **Style Customization Options**:
+  - **Color Pickers**: Select colors for lines, historical data, and targets.
+  - **Opacity Slider**: Adjust the opacity of the historical data line.
+  - **Toggle Switches**:
+    - Show/hide growth rates.
+    - Show/hide target indicators.
+    - Show/hide historical data.
+
+- **Interactivity Features**:
+  - **Tooltips**: Show detailed data (e.g., metric value, target, growth rate) when hovering over data points.
+  - **Click Actions**: Filter or drill down into data when clicking on elements (if supported).
+
+- **Configuration Panel**: Accessible via Looker's visualization properties panel. Organized sections for data, style, and interaction settings.
+
+### 5.3 Styling and Theming
+
+- **Consistency with Looker Themes**: Follow default Looker styles unless overridden by user configurations.
+- **Fonts and Typography**: Use clear, legible fonts for labels and data points. Consistent font sizes and weights.
+- **Colors**: Default color scheme with the option to customize. Use contrasting colors for current and historical data.
+- **Line Styles**: Solid lines for current data, dashed or dotted lines for historical data.
+- **Data Labels**: Positioned strategically to avoid overlapping. Include data values and, optionally, growth rates.
+- **Box Scores Formatting**: Clear separation between different metrics. Use icons or symbols if necessary for clarity.
+
+6. Technical Design
+
+### 6.1 Technology Stack
+
+- **Looker Visualization API**: Core framework for integrating custom visualizations into Looker.
+- **JavaScript (ES6+)**: Main programming language for the visualization logic.
+- **Visualization Libraries**:
+  - **D3.js**: Highly customizable, good for complex, custom visualizations.
+  - **Chart.js**: Easier to implement, may have limitations in customization.
+  - **Decision**: Use D3.js due to its flexibility and control over rendering.
+- **HTML & CSS**: For structuring and styling the visualization within the iframe.
+- **Build Tools**: Webpack or Rollup for bundling JavaScript modules. Babel for transpiling ES6+ code if necessary.
+
+### 6.2 Integration with Looker API
+
+- **Community Visualization API**: Allows the creation of custom visualizations that can be used within Looker dashboards. Provides access to data and style configurations.
+- **Limitations**:
+  - Looker visualizations run within an iframe, which imposes certain restrictions.
+  - Cross-origin policies may limit access to external resources.
+- **Workarounds**:
+  - Bundle all necessary resources into a single JavaScript file.
+  - Use inline styles or include CSS within the JavaScript code.
+- **Data Access**: Utilize the looker.plugins.visualizations object to access data and configuration.
+- **Event Handling**: Implement event listeners for interactivity. Use Looker's handleErrors function to manage errors gracefully.
+
+### 6.3 Looker Visualization API Usage
+
+- **Visualization Object Definition**:
+  ```javascript
+  looker.plugins.visualizations.add({
+    id: "six_week_graph",
+    label: "6-Week Graph",
+    options: {
+      // Define user-configurable options here
+    },
+    create: function(element, config) {
+      // Initialization code
+    },
+    updateAsync: function(data, element, config, queryResponse, details, done) {
+      // Rendering code
+    }
+  });
+  ```
+
+  ```javascript
+  looker.plugins.visualizations.add({
+    id: "twelve_month_graph",
+    label: "12-Month Graph",
+    options: {
+      // Define user-configurable options here
+    },
+    create: function(element, config) {
+      // Initialization code
+    },
+    updateAsync: function(data, element, config, queryResponse, details, done) {
+      // Rendering code
+    }
+  });
+  ```
+
+- **Configuration Options**: Define options in the options object for user customization. Include data fields, style settings, and toggles.
+- **Data Handling**: Use the `data` parameter in `updateAsync` to access the data. Use `queryResponse` to understand the data structure and field names.
+- **Rendering Logic**: Clear previous content before re-rendering. Use D3.js to bind data and render SVG elements.
+- **Resizing Handling**: Listen to resize events to adjust the visualization accordingly. Ensure that the visualization scales properly within the iframe.
+
+### 6.4 Data Transformation Logic
+
+- **Extracting Data**: Parse the data object to extract necessary fields and map Looker data structures to usable formats.
+- **Time Alignment**: Convert date strings to JavaScript Date objects. Align current and historical data by week and month.
+- **Aggregations**: Sum or average data points as needed for weekly/monthly views. Use D3.js or custom functions for data aggregation.
+- **Calculating Growth Rates**: Calculate percentage change between consecutive periods. Handle cases where previous values are zero or null.
+- **Handling Missing Data**: Use default values or interpolate missing data points. Display gaps in the line if appropriate.
+
+### 6.5 Limitations and Workarounds
+
+- **Limitation: Cross-Origin Resource Sharing (CORS)**
+  - **Issue**: The visualization iframe may have restrictions on accessing external resources.
+  - **Workaround**: Bundle all resources (JavaScript libraries, fonts, etc.) into the main JavaScript file. Avoid loading external resources at runtime.
+
+- **Limitation: Data Size Limitations**
+  - **Issue**: Large datasets may impact performance.
+  - **Workaround**: Implement efficient data processing algorithms. Limit the amount of data fetched by aggregating at the database level when possible. Use pagination or lazy loading if necessary.
+
+- **Limitation: Limited API Methods**
+  - **Issue**: The Looker Visualization API may not expose all functionalities required.
+  - **Workaround**: Use available methods creatively to achieve desired functionality. Consider submitting feature requests to Looker for future enhancements.
+
+- **Limitation: Security Constraints**
+  - **Issue**: Strict security policies may restrict certain operations.
+  - **Workaround**: Ensure all code complies with security best practices. Avoid using `eval()` or other insecure methods.
+
+- **Limitation: Browser Compatibility**
+  - **Issue**: Differences in how browsers handle certain JavaScript features.
+  - **Workaround**: Test the visualization across supported browsers. Use polyfills or transpile code to ES5 for wider compatibility.
+
+7. Implementation Plan
+
+### 7.1 Development Steps
+
+- **Project Setup**:
+  - Initialize a new project directory.
+  - Set up package management with npm or yarn.
+  - Install necessary dependencies (D3.js, build tools).
+
+- **Define Configuration Files**:
+  - Create `config.json` for each visualization configuration.
+  - Define data and style options according to Looker's schema.
+
+- **Develop Visualization Logic**:
+  - Implement the `create` function to set up the visualization container for each graph.
+  - Implement the `updateAsync` function to handle data updates and rendering.
+
+- **Data Processing Functions**:
+  - Write functions to parse and transform data from Looker's format.
+  - Implement aggregation and growth rate calculations.
+
+- **Rendering Functions**:
+  - Use D3.js to create SVG elements for the graphs.
+  - Implement functions to draw lines, points, labels, and other graphical elements.
+
+- **Interactivity and Event Handling**:
+  - Add tooltips and hover effects.
+  - Implement click events if interactivity is required.
+
+- **Style Customization**:
+  - Apply user-selected styles from the configuration options.
+  - Ensure styles are applied dynamically based on user input.
+
+- **Testing and Debugging**:
+  - Test with sample datasets in Looker.
+  - Debug any issues related to data parsing, rendering, or performance.
+
+- **Optimization**:
+  - Optimize data processing and rendering loops.
+  - Minimize DOM manipulations and reflows.
+
+- **Documentation**:
+  - Write code comments and documentation.
+  - Prepare user guides or help texts for the visualizations.
+
+### 7.2 Code Structure
+
+- **Project Root**:
+  - `package.json`: Package management file.
+  - `webpack.config.js`: Configuration for bundling.
+  - `README.md`: Project documentation.
+
+- **Source Directory (/src)**:
+  - `sixWeekGraph.js`: Code for the 6-Week Graph visualization.
+  - `twelveMonthGraph.js`: Code for the 12-Month Graph visualization.
+  - `config.json`: Visualization configuration files.
+  - `dataProcessor.js`: Functions for data transformation.
+  - `chartRenderer.js`: Functions for rendering the graphs.
+  - `styles.css`: CSS styles for the visualizations.
+  - `utils.js`: Utility functions (e.g., date formatting).
+
+- **Distribution Directory (/dist)**:
+  - `bundle.js`: Bundled JavaScript file for deployment.
+
+### 7.3 Functions and Modules
+
+- **Data Processing Module (`dataProcessor.js`)**
+  - `parseData(data, queryResponse)`: Parses Looker data into a usable format.
+  - `aggregateData(data, granularity)`: Aggregates data to weekly or monthly granularity.
+  - `alignHistoricalData(currentData, historicalData)`: Aligns current and historical datasets.
+  - `calculateGrowthRates(data)`: Calculates growth rates for the dataset.
+
+- **Chart Rendering Module (`chartRenderer.js`)**
+  - `drawGraph(container, data, config)`: Draws a single graph (either 6-week or 12-month view).
+  - `drawAxes(svg, scales, config)`: Renders the X and Y axes.
+  - `drawLines(svg, dataSeries, scales, config)`: Plots the data lines on the graph.
+  - `drawTargets(svg, targetData, scales, config)`: Places target indicators on the graph.
+  - `addDataLabels(svg, dataPoints, scales, config)`: Adds labels to data points.
+  - `drawBoxScores(container, boxScoresData, config)`: Renders the box scores below the graphs.
+
+- **Utility Functions Module (`utils.js`)**
+  - `formatDate(date, format)`: Formats date objects into strings.
+  - `getTrailingWeeks(numWeeks)`: Calculates date ranges for trailing weeks.
+  - `getTrailingMonths(numMonths)`: Calculates date ranges for trailing months.
+  - `mergeConfigs(defaultConfig, userConfig)`: Merges default settings with user-provided configurations.
+
+8. Testing and Validation
+
+### 8.1 Test Cases
+
+- **Data Parsing Tests**: Ensure that data from Looker is correctly parsed. Test with different data types and structures.
+- **Rendering Tests**: Verify that graphs render correctly with sample data. Check for correct alignment of data points, labels, and axes.
+- **User Configuration Tests**: Test all style and data options in the configuration panel. Ensure that changes in options reflect immediately in the visualization.
+- **Interactivity Tests**: Validate tooltips and hover effects. Test click interactions and ensure they trigger expected actions.
+- **Edge Case Tests**: Test with missing or incomplete data. Check behavior when data contains nulls or zeros.
+- **Performance Tests**: Load test with large datasets to assess performance. Measure rendering times and identify bottlenecks.
+
+### 8.2 Performance Testing
+
+- **Metrics to Monitor**:
+  - Time taken to parse data.
+  - Time taken to render the visualization.
+  - Memory usage during rendering.
+
+- **Tools**: Use browser developer tools for profiling. Use JavaScript performance APIs if necessary.
+
+- **Optimization Strategies**:
+  - Debounce or throttle rendering when handling rapid data updates.
+  - Reduce complexity of rendering functions.
+  - Utilize efficient data structures.
+
+9. Deployment
+
+### 9.1 Hosting Visualization Files
+
+- **Google Cloud Storage (GCS)**:
+  - Create a GCS bucket for hosting visualization files.
+  - Set appropriate permissions to allow public read access.
+
+- **Uploading Files**: Upload the bundled `bundle.js` file and any other necessary assets. Ensure that the `manifest.json` file is accessible at the root URL.
+
+- **Setting CORS Configuration**:
+  - Configure CORS settings in GCS to allow Looker to load the resources.
+  - Example CORS configuration:
+  ```json
+  [
+    {
+      "origin": ["*"],
+      "method": ["GET"],
+      "responseHeader": ["Content-Type"],
+      "maxAgeSeconds": 3600
+    }
+  ]
+  ```
+
+### 9.2 Registering the Visualization in Looker
+
+- **Enable Custom Visualizations**: Ensure that the Looker instance has custom visualizations enabled.
+- **Add Visualization to Looker**: In Looker, go to the Admin panel and navigate to "Visualizations". Add a new visualization by providing the URL to the `manifest.json` file.
+- **Testing in a Dashboard**: Create a new dashboard or open an existing one. Add a tile and select the custom "6-Week Graph" and "12-Month Graph" visualizations. Configure the data and style options to test functionality.
+- **Sharing with Users**: Ensure that the visualizations are available to other users. Provide documentation or training if necessary.
+
+10. Appendix
+
+### 10.1 Sample Code Snippets
+
+- **Visualization Definition**:
+  ```javascript
+  looker.plugins.visualizations.add({
+    id: "six_week_graph",
+    label: "6-Week Graph",
+    options: {
+      metric: {
+        type: "string",
+        label: "Metric",
+        section: "Data",
+        display: "select",
+        values: [] // Populated dynamically from available fields
+      },
+      date_dimension: {
+        type: "string",
+        label: "Date Dimension",
+        section: "Data",
+        display: "select",
+        values: [] // Populated dynamically
+      },
+      target_metric: {
+        type: "string",
+        label: "Target Metric",
+        section: "Data",
+        display: "select",
+        values: [] // Populated dynamically
+      },
+      show_growth_rates: {
+        type: "boolean",
+        label: "Show Growth Rates",
+        default: true,
+        section: "Options"
+      },
+      line_color: {
+        type: "string",
+        label: "Line Color",
+        display: "color",
+        default: "#3366CC",
+        section: "Style"
+      },
+      historical_line_color: {
+        type: "string",
+        label: "Historical Line Color",
+        display: "color",
+        default: "#FF9999",
+        section: "Style"
+      }
+      // Additional options...
+    },
+    create: function(element, config) {
+      // Initialization code
+      element.innerHTML = "";
+      this.container = d3.select(element).append("div")
+        .attr("class", "six-week-graph-container");
+    },
+    updateAsync: function(data, element, config, queryResponse, details, done) {
+      // Data parsing and rendering code
+    }
+  });
+  ```
+
+  ```javascript
+  looker.plugins.visualizations.add({
+    id: "twelve_month_graph",
+    label: "12-Month Graph",
+    options: {
+      metric: {
+        type: "string",
+        label: "Metric",
+        section: "Data",
+        display: "select",
+        values: [] // Populated dynamically from available fields
+      },
+      date_dimension: {
+        type: "string",
+        label: "Date Dimension",
+        section: "Data",
+        display: "select",
+        values: [] // Populated dynamically
+      },
+      target_metric: {
+        type: "string",
+        label: "Target Metric",
+        section: "Data",
+        display: "select",
+        values: [] // Populated dynamically
+      },
+      show_growth_rates: {
+        type: "boolean",
+        label: "Show Growth Rates",
+        default: true,
+        section: "Options"
+      },
+      line_color: {
+        type: "string",
+        label: "Line Color",
+        display: "color",
+        default: "#3366CC",
+        section: "Style"
+      },
+      historical_line_color: {
+        type: "string",
+        label: "Historical Line Color",
+        display: "color",
+        default: "#FF9999",
+        section: "Style"
+      }
+      // Additional options...
+    },
+    create: function(element, config) {
+      // Initialization code
+      element.innerHTML = "";
+      this.container = d3.select(element).append("div")
+        .attr("class", "twelve-month-graph-container");
+    },
+    updateAsync: function(data, element, config, queryResponse, details, done) {
+      // Data parsing and rendering code
+    }
+  });
+  ```
+
+- **Data Parsing Function**:
+  ```javascript
+  function parseData(data, queryResponse) {
+    const fields = queryResponse.fields;
+    const parsedData = data.map(row => {
+      return {
+        date: new Date(row[fields.dimensions[0].name].value),
+        metric: row[fields.measures[0].name].value,
+        target: row[fields.measures[1] ? fields.measures[1].name : null]?.value || null
+      };
+    });
+    return parsedData;
+  }
+  ```
+
+- **Drawing the Graph**:
+  ```javascript
+  function drawGraph(container, data, config, isSixWeekView) {
+    // Set dimensions and margins
+    const margin = { top: 20, right: 20, bottom: 50, left: 50 };
+    const width = container.node().offsetWidth - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    // Create SVG element
+    const svg = container.append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Define scales and axes
+    const xScale = d3.scaleTime()
+      .domain(d3.extent(data, d => d.date))
+      .range([0, width]);
+
+    const yScale = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.metric)])
+      .range([height, 0]);
+
+    // Draw axes
+    svg.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(xScale).ticks(isSixWeekView ? 6 : 12));
+
+    svg.append("g")
+      .call(d3.axisLeft(yScale));
+
+    // Draw line
+    const line = d3.line()
+      .x(d => xScale(d.date))
+      .y(d => yScale(d.metric));
+
+    svg.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", config.line_color)
+      .attr("stroke-width", 2)
+      .attr("d", line);
+
+    // Add data labels
+    svg.selectAll(".data-label")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("x", d => xScale(d.date))
+      .attr("y", d => yScale(d.metric) - 5)
+      .text(d => d.metric)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "10px");
+
+    // Additional rendering code for historical data, targets, etc.
+  }
+  ```
+
+### 10.2 Configuration Files
+
+- **manifest.json**:
+  ```json
+  {
+    "id": "six_week_graph",
+    "title": "6-Week Graph",
+    "description": "Custom visualization for displaying a 6-week graph.",
+    "iconUrl": "https://example.com/icon.png",
+    "jsUrl": "https://storage.googleapis.com/my-bucket/bundle.js",
+    "cssUrl": "",
+    "properties": {},
+    "supports": {
+      "filtering": true,
+      "configPanel": true
+    },
+    "devMode": false
+  }
+  ```
+
+  ```json
+  {
+    "id": "twelve_month_graph",
+    "title": "12-Month Graph",
+    "description": "Custom visualization for displaying a 12-month graph.",
+    "iconUrl": "https://example.com/icon.png",
+    "jsUrl": "https://storage.googleapis.com/my-bucket/bundle.js",
+    "cssUrl": "",
+    "properties": {},
+    "supports": {
+      "filtering": true,
+      "configPanel": true
+    },
+    "devMode": false
+  }
+  ```
+
+
