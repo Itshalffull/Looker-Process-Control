@@ -1,0 +1,28 @@
+{
+  "visualizations": [
+    {
+      "id": "six_week_graph",
+      "label": "6-Week Graph",
+      "description": "Displays metrics over a 6-week period with historical comparison",
+      "dependencies": ["d3"],
+      "jsFiles": [
+        "dist/six_week_graph.bundle.js"
+      ],
+      "cssFiles": [
+        "dist/styles.css"
+      ]
+    },
+    {
+      "id": "twelve_month_graph",
+      "label": "12-Month Graph",
+      "description": "Displays metrics over a 12-month period with historical comparison",
+      "dependencies": ["d3"],
+      "jsFiles": [
+        "dist/twelve_month_graph.bundle.js"
+      ],
+      "cssFiles": [
+        "dist/styles.css"
+      ]
+    }
+  ]
+} 
