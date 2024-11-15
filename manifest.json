@@ -9,7 +9,7 @@
         "description": "Displays metrics over a 6-week period with historical comparison",
         "dependencies": ["d3"],
         "jsFiles": [
-          "dist/bundle.js"
+          "dist/six_week_graph.bundle.js"
         ],
         "cssFiles": [
           "dist/styles.css"
@@ -21,7 +21,7 @@
         "description": "Displays metrics over a 12-month period with historical comparison",
         "dependencies": ["d3"],
         "jsFiles": [
-          "dist/bundle.js"
+          "dist/twelve_month_graph.bundle.js"
         ],
         "cssFiles": [
           "dist/styles.css"

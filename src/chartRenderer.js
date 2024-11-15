@@ -1,4 +1,10 @@
-import * as d3 from 'd3';
+import { select, selectAll } from 'd3-selection';
+import { scaleLinear, scaleTime } from 'd3-scale';
+import { line, symbol, symbolTriangle } from 'd3-shape';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { format } from 'd3-format';
+import { extent, max } from 'd3-array';
+import { timeFormat } from 'd3-time-format';
 
 /**
  * Draws the main graph visualization
@@ -32,12 +38,12 @@ export function drawGraph(container, data, config) {
   }
   
   // Create scales
-  const xScale = d3.scaleTime()
-    .domain(d3.extent(data, d => d.date))
+  const xScale = scaleTime()
+    .domain(extent(data, d => d.date))
     .range([0, width]);
     
-  const yScale = d3.scaleLinear()
-    .domain([0, d3.max(data, d => Math.max(d.value, d.target || 0, d.historicalValue || 0))])
+  const yScale = scaleLinear()
+    .domain([0, max(data, d => Math.max(d.value, d.target || 0, d.historicalValue || 0))])
     .range([height, 0])
     .nice();
     
@@ -98,75 +104,90 @@ export function drawBoxScores(container, data, config) {
 
 function drawAxes(svg, xScale, yScale, height, config) {
   // X axis
-  svg.append("g")
-    .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(xScale)
-      .ticks(config.isWeeklyView ? 6 : 12)
-      .tickFormat(d3.timeFormat(config.isWeeklyView ? "%m/%d" : "%b %Y")));
-    
+  const xAxis = axisBottom(xScale)
+    .ticks(config.isWeeklyView ? 6 : 12)
+    .tickFormat(
+      timeFormat(config.isWeeklyView ? '%m/%d' : '%b %Y')
+    );
+
+  svg
+    .append('g')
+    .attr('transform', `translate(0,${height})`)
+    .call(xAxis);
+
   // Y axis
-  svg.append("g")
-    .call(d3.axisLeft(yScale));
+  svg.append('g').call(axisLeft(yScale));
 }
 
 function drawMainLine(svg, data, xScale, yScale, config) {
-  const line = d3.line()
-    .x(d => xScale(d.date))
-    .y(d => yScale(d.value));
-    
-  svg.append("path")
+  const lineGenerator = line()
+    .x((d) => xScale(d.date))
+    .y((d) => yScale(d.value));
+
+  svg
+    .append('path')
     .datum(data)
-    .attr("class", "main-line")
-    .attr("fill", "none")
-    .attr("stroke", config.lineColor || "#3366CC")
-    .attr("stroke-width", 2)
-    .attr("d", line);
+    .attr('class', 'main-line')
+    .attr('fill', 'none')
+    .attr('stroke', config.lineColor || '#3366CC')
+    .attr('stroke-width', 2)
+    .attr('d', lineGenerator);
 }
 
 function drawHistoricalLine(svg, data, xScale, yScale, config) {
-  const line = d3.line()
-    .x(d => xScale(d.date))
-    .y(d => yScale(d.historicalValue))
-    .defined(d => d.historicalValue != null);
-    
-  svg.append("path")
-    .datum(data.filter(d => d.historicalValue != null))
-    .attr("class", "historical-line")
-    .attr("fill", "none")
-    .attr("stroke", config.historicalLineColor || "#FF9999")
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "4,4")
-    .attr("opacity", 0.7)
-    .attr("d", line);
+  const lineGenerator = line()
+    .defined((d) => d.historicalValue != null)
+    .x((d) => xScale(d.date))
+    .y((d) => yScale(d.historicalValue));
+
+  svg
+    .append('path')
+    .datum(data.filter((d) => d.historicalValue != null))
+    .attr('class', 'historical-line')
+    .attr('fill', 'none')
+    .attr('stroke', config.historicalLineColor || '#FF9999')
+    .attr('stroke-width', 2)
+    .attr('stroke-dasharray', '4,4')
+    .attr('opacity', 0.7)
+    .attr('d', lineGenerator);
 }
 
 function drawTargets(svg, data, xScale, yScale, config) {
-  svg.selectAll(".target-triangle")
-    .data(data.filter(d => d.target != null))
+  const symbolGenerator = symbol()
+    .type(symbolTriangle)
+    .size(64);
+
+  svg
+    .selectAll('.target-triangle')
+    .data(data.filter((d) => d.target != null))
     .enter()
-    .append("path")
-    .attr("class", "target-triangle")
-    .attr("d", d3.symbol().type(d3.symbolTriangle).size(64))
-    .attr("transform", d => `translate(${xScale(d.date)},${yScale(d.target)})`)
-    .attr("fill", config.targetColor || "#00AA00");
+    .append('path')
+    .attr('class', 'target-triangle')
+    .attr('d', symbolGenerator)
+    .attr(
+      'transform',
+      (d) => `translate(${xScale(d.date)},${yScale(d.target)})`
+    )
+    .attr('fill', config.targetColor || '#00AA00');
 }
 
 function addDataLabels(svg, data, xScale, yScale, config) {
-  svg.selectAll(".value-label")
+  svg
+    .selectAll('.value-label')
     .data(data)
     .enter()
-    .append("text")
-    .attr("class", "value-label")
-    .attr("x", d => xScale(d.date))
-    .attr("y", d => yScale(d.value) - 10)
-    .attr("text-anchor", "middle")
-    .text(d => formatValue(d.value));
+    .append('text')
+    .attr('class', 'value-label')
+    .attr('x', (d) => xScale(d.date))
+    .attr('y', (d) => yScale(d.value) - 10)
+    .attr('text-anchor', 'middle')
+    .text((d) => formatValue(d.value));
 }
 
 function formatValue(value) {
-  return value != null ? d3.format(",.0f")(value) : "N/A";
+  return value != null ? format(',.0f')(value) : 'N/A';
 }
 
 function formatPercent(value) {
-  return value != null ? d3.format("+.1f")(value) + "%" : "N/A";
+  return value != null ? format('+.1f')(value) + '%' : 'N/A';
 } 
