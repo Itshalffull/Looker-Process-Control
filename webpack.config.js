@@ -77,10 +77,6 @@ module.exports = {
       "crypto": false
     }
   },
-  externals: {
-    'd3': 'd3',
-    '@google/dscc': 'dscc'
-  },
   performance: {
     hints: false,
     maxEntrypointSize: 512000,
