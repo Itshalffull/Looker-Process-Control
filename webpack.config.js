@@ -12,6 +12,7 @@ module.exports = {
     filename: '[name].js',
     clean: true,
     library: {
+      name: '[name]',
       type: 'window'
     }
   },
@@ -58,8 +59,8 @@ module.exports = {
             comments: false,
           },
           compress: {
-            drop_console: true,
-            drop_debugger: true
+            drop_console: false,
+            drop_debugger: false
           }
         },
         extractComments: false,
@@ -70,6 +71,7 @@ module.exports = {
     extensions: ['.js'],
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      '@google/dscc': path.resolve(__dirname, 'node_modules/@google/dscc')
     },
     fallback: {
       "path": false,

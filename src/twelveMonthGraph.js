@@ -130,8 +130,39 @@ function drawViz(data) {
   }
 }
 
-// Subscribe to data and style changes
-dscc.subscribeToData(drawViz, { 
-  transform: dscc.objectTransform,
-  style: true  // Explicitly enable style updates
-}); 
+// Wait for DOM content to be loaded
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        // Try to use imported dscc first
+        if (dscc && typeof dscc.subscribeToData === 'function') {
+            dscc.subscribeToData(drawViz, { 
+                transform: dscc.objectTransform,
+                style: true
+            });
+        } 
+        // Fallback to global dscc
+        else if (window.dscc && typeof window.dscc.subscribeToData === 'function') {
+            window.dscc.subscribeToData(drawViz, { 
+                transform: window.dscc.objectTransform,
+                style: true
+            });
+        }
+        else {
+            console.error('DSCC library not found. Running in local development mode.');
+            // Add mock data for local development
+            drawViz({
+                tables: {
+                    DEFAULT: [
+                        // Add some sample data here
+                    ]
+                },
+                style: LOCAL_STYLE_CONFIG
+            });
+        }
+    } catch (error) {
+        console.error('Error initializing visualization:', error);
+    }
+});
+
+// Export for webpack
+export { drawViz }; 
