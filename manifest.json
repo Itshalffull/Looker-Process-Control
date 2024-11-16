@@ -17,7 +17,7 @@
       "iconUrl": "https://your-icon-url.com/icon.png",
       "infoUrl": "https://your-info-url.com",
       "resource": {
-        "js": "gs://looker-process-control/six_week_graph.bundle.js",
+        "js": "gs://looker-process-control/six_week_graph.js",
         "css": "gs://looker-process-control/styles.css",
         "config": "gs://looker-process-control/six_week_graph-config.json"
       }
@@ -29,9 +29,9 @@
       "iconUrl": "https://your-icon-url.com/icon.png",
       "infoUrl": "https://your-info-url.com",
       "resource": {
-        "js": "gs://looker-process-control/twelve_month_graph.bundle.js",
+        "js": "gs://looker-process-control/twelve_month_graph.js",
         "css": "gs://looker-process-control/styles.css",
-        "config": "gs://looker-process-control/twelve_month_graph-config.json"
+        "config": "gs://looker-process-control/twelve_month_graph.json"
       }
     }
   ]

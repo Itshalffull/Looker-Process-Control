@@ -65,10 +65,6 @@ module.exports = {
         extractComments: false,
       }),
     ],
-    splitChunks: {
-      chunks: 'all',
-      name: 'vendor'
-    }
   },
   resolve: {
     extensions: ['.js'],
