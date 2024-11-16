@@ -8,11 +8,17 @@
     "build:dev": "webpack --config webpack.config.js --mode development",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "start": "dscc-scripts viz start",
+    "push": "dscc-scripts viz push",
+    "update_message": "dscc-scripts viz update_message"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
+    "@babel/plugin-transform-runtime": "^7.25.9",
     "@babel/preset-env": "^7.26.0",
+    "@google/dscc": "^0.3.22",
+    "@google/dscc-scripts": "^1.0.17",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/google.visualization": "^0.0.74",
     "babel-jest": "^29.7.0",
@@ -23,10 +29,13 @@
     "style-loader": "^3.3.4",
     "terser-webpack-plugin": "^5.3.10",
     "webpack": "^5.96.1",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
-    "@google/dscc": "^0.3.22",
+    "@babel/runtime": "^7.26.0",
+    "@google/dscc": "^1.2.0",
+    "@google/dscc-scripts": "^1.2.0",
     "d3": "^7.8.5",
     "d3-array": "^3.2.4",
     "d3-axis": "^3.0.0",
