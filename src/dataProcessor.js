@@ -12,17 +12,24 @@ export function parseData(data) {
   try {
     const { tables, fields } = data;
     
+    // Access the first dimension and metrics
+    const dateDimensionField = fields?.dimensions?.[0];
+    const valueMeasureField = fields?.metrics?.[0];
+    const targetMeasureField = fields?.metrics?.[1];
+    const historicalValueMeasureField = fields?.metrics?.[2];
+
     // Validate required fields exist
-    if (!fields.dateDimension?.[0]?.name || !fields.valueMeasure?.[0]?.name) {
+    if (!dateDimensionField?.name || !valueMeasureField?.name) {
       throw new Error('Required fields (date dimension and value measure) are missing');
     }
 
-    return tables.DEFAULT.map((row, index) => {
+    return tables?.DEFAULT?.map((row, index) => {
       try {
-        const dateValue = row[fields.dateDimension[0].name];
-        const valueMeasure = row[fields.valueMeasure[0].name];
-        const targetMeasure = fields.targetMeasure?.[0] ? row[fields.targetMeasure[0].name] : null;
-        const historicalValueMeasure = fields.historicalValueMeasure?.[0] ? row[fields.historicalValueMeasure[0].name] : null;
+        // Access data from dimensions and metrics arrays
+        const dateValue = row?.dimension?.[0];
+        const valueMeasure = row?.metric?.[0];
+        const targetMeasure = targetMeasureField ? row?.metric?.[1] : null;
+        const historicalValueMeasure = historicalValueMeasureField ? row?.metric?.[2] : null;
 
         // Validate date
         const parsedDate = new Date(dateValue);
@@ -47,6 +54,7 @@ export function parseData(data) {
         return null;
       }
     }).filter(row => row !== null); // Remove any rows that failed to parse
+
   } catch (error) {
     console.error('Error parsing data:', error);
     throw new Error(`Failed to parse data: ${error.message}`);
