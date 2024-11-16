@@ -1,28 +1,38 @@
 {
-  "visualizations": [
+  "name": "Custom Graphs Package",
+  "organization": "Looker Process Control",
+  "description": "A package of custom graph visualizations.",
+  "logoUrl": "https://your-logo-url.com",
+  "organizationUrl": "https://your-organization-url.com",
+  "supportUrl": "https://your-support-url.com",
+  "privacyPolicyUrl": "https://your-privacy-policy-url.com",
+  "termsOfServiceUrl": "https://your-terms-of-service-url.com",
+  "packageUrl": "https://your-package-url.com",
+  "devMode": false,
+  "components": [
     {
       "id": "custom_graphs.six_week_graph",
-      "label": "6-Week Graph",
+      "name": "6-Week Graph",
       "description": "Displays metrics over a 6-week period with historical comparison",
-      "dependencies": ["d3"],
-      "jsFiles": [
-        "https://itshalffull.github.io/Looker-Process-Control/dist/six_week_graph.bundle.js"
-      ],
-      "cssFiles": [
-        "https://itshalffull.github.io/Looker-Process-Control/dist/styles.css"
-      ]
+      "iconUrl": "https://your-icon-url.com/icon.png",
+      "infoUrl": "https://your-info-url.com",
+      "resource": {
+        "js": "gs://looker-process-control/Looker-Process-Control/dist/six_week_graph.bundle.js",
+        "css": "gs://looker-process-control/Looker-Process-Control/dist/styles.css",
+        "config": "gs://looker-process-control/Looker-Process-Control/dist/six_week_graph-config.json"
+      }
     },
     {
       "id": "custom_graphs.twelve_month_graph",
-      "label": "12-Month Graph",
+      "name": "12-Month Graph",
       "description": "Displays metrics over a 12-month period with historical comparison",
-      "dependencies": ["d3"],
-      "jsFiles": [
-        "https://itshalffull.github.io/Looker-Process-Control/dist/twelve_month_graph.bundle.js"
-      ],
-      "cssFiles": [
-        "https://itshalffull.github.io/Looker-Process-Control/dist/styles.css"
-      ]
+      "iconUrl": "https://your-icon-url.com/icon.png",
+      "infoUrl": "https://your-info-url.com",
+      "resource": {
+        "js": "gs://looker-process-control/Looker-Process-Control/dist/twelve_month_graph.bundle.js",
+        "css": "gs://looker-process-control/Looker-Process-Control/dist/styles.css",
+        "config": "gs://looker-process-control/Looker-Process-Control/dist/twelve_month_graph-config.json"
+      }
     }
   ]
 } 
