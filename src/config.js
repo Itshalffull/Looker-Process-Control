@@ -1,77 +1,110 @@
 /**
  * Default configuration options for the graph visualizations
  */
-export const DEFAULT_OPTIONS = {
-  // Data Configuration
-  metric: {
-    type: "string",
-    label: "Metric",
-    section: "Data",
-    display: "select",
-    values: [] // Populated dynamically from available fields
-  },
-  date_dimension: {
-    type: "string",
-    label: "Date Dimension",
-    section: "Data",
-    display: "select",
-    values: [] // Populated dynamically
-  },
-  target_metric: {
-    type: "string",
-    label: "Target Metric",
-    section: "Data",
-    display: "select",
-    values: [], // Populated dynamically
-    required: false
-  },
-
-  // Display Options
-  show_historical: {
-    type: "boolean",
-    label: "Show Historical Data",
-    default: true,
-    section: "Display"
-  },
-  show_targets: {
-    type: "boolean",
-    label: "Show Targets",
-    default: true,
-    section: "Display"
-  },
-  show_growth_rates: {
-    type: "boolean",
-    label: "Show Growth Rates",
-    default: true,
-    section: "Display"
-  },
-  graph_number: {
-    type: "number",
-    label: "Graph Number",
-    default: 1,
-    section: "Display"
-  },
-
-  // Style Configuration
-  line_color: {
-    type: "string",
-    label: "Line Color",
-    display: "color",
-    default: "#3366CC",
-    section: "Style"
-  },
-  historical_line_color: {
-    type: "string",
-    label: "Historical Line Color",
-    display: "color",
-    default: "#FF9999",
-    section: "Style"
-  },
-  target_color: {
-    type: "string",
-    label: "Target Color",
-    display: "color",
-    default: "#00AA00",
-    section: "Style"
-  }
+export const DEFAULT_CONFIG = {
+  data: [
+    {
+      id: "concepts",
+      label: "Data",
+      elements: [
+        {
+          id: "dateDimension",
+          label: "Date Dimension",
+          type: "DIMENSION",
+          options: {
+            min: 1,
+            max: 1,
+            supportedTypes: ["DATE"]
+          }
+        },
+        {
+          id: "valueMeasure",
+          label: "Value Measure",
+          type: "METRIC",
+          options: {
+            min: 1,
+            max: 1
+          }
+        },
+        {
+          id: "targetMeasure",
+          label: "Target Measure",
+          type: "METRIC",
+          options: {
+            min: 0,
+            max: 1
+          }
+        },
+        {
+          id: "historicalValueMeasure",
+          label: "Historical Value Measure",
+          type: "METRIC",
+          options: {
+            min: 0,
+            max: 1
+          }
+        }
+      ]
+    }
+  ],
+  style: [
+    {
+      id: "display",
+      label: "Display Options",
+      elements: [
+        {
+          type: "CHECKBOX",
+          id: "showHistorical",
+          label: "Show Historical Data",
+          defaultValue: true
+        },
+        {
+          type: "CHECKBOX",
+          id: "showTargets",
+          label: "Show Targets",
+          defaultValue: true
+        },
+        {
+          type: "CHECKBOX",
+          id: "showGrowthRates",
+          label: "Show Growth Rates",
+          defaultValue: true
+        },
+        {
+          type: "NUMBER",
+          id: "graph_number",
+          label: "Graph Number",
+          defaultValue: 1,
+          options: {
+            min: 1,
+            max: 100
+          }
+        }
+      ]
+    },
+    {
+      id: "colors",
+      label: "Color Options",
+      elements: [
+        {
+          type: "FILL_COLOR",
+          id: "lineColor",
+          label: "Line Color",
+          defaultValue: "#3366CC"
+        },
+        {
+          type: "FILL_COLOR",
+          id: "historicalLineColor",
+          label: "Historical Line Color",
+          defaultValue: "#FF9999"
+        },
+        {
+          type: "FILL_COLOR",
+          id: "targetColor",
+          label: "Target Color",
+          defaultValue: "#00AA00"
+        }
+      ]
+    }
+  ]
 }; 

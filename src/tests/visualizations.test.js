@@ -1,40 +1,47 @@
-import { select } from 'd3-selection';
+/**
+ * @jest-environment jsdom
+ */
+
 import { jest } from '@jest/globals';
 import { performance } from 'perf_hooks';
 import { parseData, aggregateToWeekly, calculateGrowthRates } from '../dataProcessor';
 import { drawGraph, drawBoxScores } from '../chartRenderer';
 import { getTrailingWeeks, formatDate } from '../utils';
 
+// Sample data accessible throughout tests
+const sampleLookerStudioData = {
+  tables: {
+    DEFAULT: [
+      {
+        dateDimension: "2024-01-01",
+        valueMeasure: 100,
+        targetMeasure: 110,
+        historicalValueMeasure: 95
+      },
+      {
+        dateDimension: "2024-01-02",
+        valueMeasure: 120,
+        targetMeasure: 115,
+        historicalValueMeasure: 105
+      }
+    ]
+  },
+  fields: {
+    dateDimension: [{ name: "dateDimension" }],
+    valueMeasure: [{ name: "valueMeasure" }],
+    targetMeasure: [{ name: "targetMeasure" }],
+    historicalValueMeasure: [{ name: "historicalValueMeasure" }]
+  },
+  style: {
+    lineColor: { value: { color: "#3366CC" } },
+    showHistorical: { value: true },
+    showTargets: { value: true }
+  }
+};
+
 describe('Data Processing Tests', () => {
-  // Sample test data
-  const sampleLookerData = [
-    {
-      "dimension1": { value: "2024-01-01" },
-      "measure1": { value: "100" },
-      "measure2": { value: "110" },
-      "measure3": { value: "95" }
-    },
-    {
-      "dimension1": { value: "2024-01-02" },
-      "measure1": { value: "120" },
-      "measure2": { value: "115" },
-      "measure3": { value: "105" }
-    }
-  ];
-
-  const sampleQueryResponse = {
-    fields: {
-      dimensions: [{ name: "dimension1" }],
-      measures: [
-        { name: "measure1" },
-        { name: "measure2" },
-        { name: "measure3" }
-      ]
-    }
-  };
-
-  test('parseData correctly transforms Looker data', () => {
-    const parsed = parseData(sampleLookerData, sampleQueryResponse);
+  test('parseData correctly transforms Looker Studio data', () => {
+    const parsed = parseData(sampleLookerStudioData);
     expect(parsed).toHaveLength(2);
     expect(parsed[0]).toHaveProperty('date');
     expect(parsed[0]).toHaveProperty('value');
@@ -43,16 +50,19 @@ describe('Data Processing Tests', () => {
   });
 
   test('parseData handles missing or null values', () => {
-    const dataWithNulls = [
-      {
-        "dimension1": { value: "2024-01-01" },
-        "measure1": { value: null },
-        "measure2": { value: undefined },
-        "measure3": { value: "95" }
-      }
-    ];
+    const dataWithNulls = {
+      tables: {
+        DEFAULT: [{
+          dateDimension: "2024-01-01",
+          valueMeasure: null,
+          targetMeasure: undefined,
+          historicalValueMeasure: 95
+        }]
+      },
+      fields: sampleLookerStudioData.fields
+    };
     
-    const parsed = parseData(dataWithNulls, sampleQueryResponse);
+    const parsed = parseData(dataWithNulls);
     expect(parsed[0].value).toBe(0); // Should default to 0
     expect(parsed[0].target).toBeNull();
   });
@@ -71,24 +81,23 @@ describe('Data Processing Tests', () => {
 });
 
 describe('Rendering Tests', () => {
-  let container;
-
   beforeEach(() => {
-    container = document.createElement('div');
-    document.body.appendChild(container);
-  });
-
-  afterEach(() => {
-    document.body.removeChild(container);
+    document.body.innerHTML = '';
   });
 
   test('drawGraph creates SVG element with correct dimensions', () => {
+    const container = document.createElement('div');
     const data = [
       { date: new Date('2024-01-01'), value: 100, target: 110, historicalValue: 95 }
     ];
-    const config = { showHistorical: true, showTargets: true };
     
-    drawGraph(select(container), data, config);
+    const config = { 
+      showHistorical: { value: true }, 
+      showTargets: { value: true },
+      lineColor: { value: { color: "#3366CC" } }
+    };
+    
+    drawGraph(container, data, config);
     
     const svg = container.querySelector('svg');
     expect(svg).toBeTruthy();
@@ -97,13 +106,21 @@ describe('Rendering Tests', () => {
   });
 
   test('drawGraph renders main line, historical line, and targets', () => {
+    const container = document.createElement('div');
     const data = [
       { date: new Date('2024-01-01'), value: 100, target: 110, historicalValue: 95 },
       { date: new Date('2024-01-02'), value: 120, target: 115, historicalValue: 105 }
     ];
-    const config = { showHistorical: true, showTargets: true };
     
-    drawGraph(select(container), data, config);
+    const config = { 
+      showHistorical: { value: true }, 
+      showTargets: { value: true },
+      lineColor: { value: { color: "#3366CC" } },
+      historicalLineColor: { value: { color: "#FF9999" } },
+      targetColor: { value: { color: "#00AA00" } }
+    };
+    
+    drawGraph(container, data, config);
     
     expect(container.querySelector('.main-line')).toBeTruthy();
     expect(container.querySelector('.historical-line')).toBeTruthy();
@@ -111,6 +128,7 @@ describe('Rendering Tests', () => {
   });
 
   test('drawBoxScores renders all required metrics', () => {
+    const container = document.createElement('div');
     const boxScoresData = {
       lastWeek: 100,
       wow: 5.2,
@@ -120,10 +138,10 @@ describe('Rendering Tests', () => {
       ytd: 12.4
     };
     
-    drawBoxScores(select(container), boxScoresData, {});
+    drawBoxScores(container, boxScoresData, {});
     
     const scoreItems = container.querySelectorAll('.score-item');
-    expect(scoreItems).toHaveLength(6); // Should have 6 metrics
+    expect(scoreItems.length).toBe(6); // Should have 6 metrics
   });
 });
 
@@ -135,14 +153,49 @@ describe('User Configuration Tests', () => {
     ];
     
     // Test with historical data hidden
-    let config = { showHistorical: false, showTargets: true };
-    drawGraph(select(container), data, config);
-    expect(container.querySelector('.historical-line')).toBeNull();
+    const configNoHistorical = { 
+      showHistorical: { value: false }, 
+      showTargets: { value: true },
+      lineColor: { value: { color: "#3366CC" } }
+    };
+    
+    drawGraph(container, data, configNoHistorical);
+    expect(container.querySelector('.historical-line')).toBeFalsy();
     
     // Test with targets hidden
-    config = { showHistorical: true, showTargets: false };
-    drawGraph(select(container), data, config);
-    expect(container.querySelector('.target-triangle')).toBeNull();
+    const configNoTargets = { 
+      showHistorical: { value: true }, 
+      showTargets: { value: false },
+      lineColor: { value: { color: "#3366CC" } }
+    };
+    
+    drawGraph(container, data, configNoTargets);
+    expect(container.querySelector('.target-triangle')).toBeFalsy();
+  });
+
+  test('color configuration changes are applied', () => {
+    const container = document.createElement('div');
+    const data = [
+      { date: new Date('2024-01-01'), value: 100, target: 110, historicalValue: 95 }
+    ];
+    
+    const config = { 
+      showHistorical: { value: true }, 
+      showTargets: { value: true },
+      lineColor: { value: { color: "#FF0000" } },
+      historicalLineColor: { value: { color: "#00FF00" } },
+      targetColor: { value: { color: "#0000FF" } }
+    };
+    
+    drawGraph(container, data, config);
+    
+    const mainLine = container.querySelector('.main-line');
+    const historicalLine = container.querySelector('.historical-line');
+    const targetTriangle = container.querySelector('.target-triangle');
+    
+    expect(mainLine.getAttribute('stroke')).toBe('#FF0000');
+    expect(historicalLine.getAttribute('stroke')).toBe('#00FF00');
+    expect(targetTriangle.getAttribute('fill')).toBe('#0000FF');
   });
 });
 
@@ -150,7 +203,13 @@ describe('Edge Case Tests', () => {
   test('handles empty dataset', () => {
     const emptyData = [];
     const growth = calculateGrowthRates(emptyData);
-    expect(growth).toEqual({});
+    expect(growth).toEqual({
+      weekOverWeek: null,
+      yearOverYear: null,
+      monthToDate: null,
+      quarterToDate: null,
+      yearToDate: null
+    });
   });
 
   test('handles single data point', () => {
@@ -173,25 +232,28 @@ describe('Edge Case Tests', () => {
 
 describe('Performance Tests', () => {
   test('processes large datasets efficiently', () => {
-    // Generate large dataset
-    const largeData = Array.from({ length: 1000 }, (_, i) => ({
-      date: new Date(2024, 0, i + 1),
-      value: Math.random() * 1000,
-      target: Math.random() * 1000,
-      historicalValue: Math.random() * 1000
-    }));
+    const largeData = {
+      tables: {
+        DEFAULT: Array.from({ length: 1000 }, (_, i) => ({
+          dateDimension: new Date(2024, 0, i + 1).toISOString(),
+          valueMeasure: Math.random() * 1000,
+          targetMeasure: Math.random() * 1000,
+          historicalValueMeasure: Math.random() * 1000
+        }))
+      },
+      fields: sampleLookerStudioData.fields
+    };
     
     const startTime = performance.now();
     
-    // Process data
-    const weekly = aggregateToWeekly(largeData);
+    const parsed = parseData(largeData);
+    const weekly = aggregateToWeekly(parsed);
     const growth = calculateGrowthRates(weekly);
     
     const endTime = performance.now();
     const processingTime = endTime - startTime;
     
-    // Processing should take less than 100ms for 1000 records
-    expect(processingTime).toBeLessThan(100);
+    expect(processingTime).toBeLessThan(100); // Should process in under 100ms
   });
 
   test('renders large datasets efficiently', () => {
@@ -205,12 +267,15 @@ describe('Performance Tests', () => {
     
     const startTime = performance.now();
     
-    drawGraph(select(container), largeData, { showHistorical: true, showTargets: true });
+    drawGraph(container, largeData, {
+      showHistorical: { value: true },
+      showTargets: { value: true },
+      lineColor: { value: { color: "#3366CC" } }
+    });
     
     const endTime = performance.now();
     const renderTime = endTime - startTime;
     
-    // Rendering should take less than 200ms for 100 data points
-    expect(renderTime).toBeLessThan(200);
+    expect(renderTime).toBeLessThan(200); // Should render in under 200ms
   });
 }); 
