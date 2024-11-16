@@ -31,7 +31,7 @@
       "resource": {
         "js": "gs://looker-process-control/twelve_month_graph.js",
         "css": "gs://looker-process-control/styles.css",
-        "config": "gs://looker-process-control/twelve_month_graph.json"
+        "config": "gs://looker-process-control/twelve_month_graph-config.json"
       }
     }
   ]
